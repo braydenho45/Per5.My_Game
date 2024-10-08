@@ -32,6 +32,7 @@ class Game:
     self.all_sprites = pg.sprite.Group()
     self.all_walls = pg.sprite.Group()
     self.all_powerups = pg.sprite.Group()
+    self.all_coins = pg.sprite.Group()
     # instantiating the class to create the player object 
     # self.player = Player(self, 5, 5)
     # self.mob = Mob(self, 100, 100)
@@ -52,6 +53,8 @@ class Game:
           self.player = Player(self, col, row)
         if tile == 'U':
           Powerup(self, col, row)
+        if tile == 'C':
+          Coin(self, col, row)
     for i in range(1000):
       Powerup(self, randint(0,WIDTH), randint(0,HEIGHT))
 
