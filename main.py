@@ -10,6 +10,16 @@ from tilemap import *
 from os import path
 # we are editing this file after installing git
 
+'''
+GOALS: 
+RULES:
+FEEDBACK:
+FREEDOM:
+
+What's the sentence: Player 1 collides with enemy and enemy bounces off
+
+'''
+
 # create a game class that carries all the properties of the game and methods
 class Game:
   # initializes all the things we need to run the game...includes the game clock which can set the FPS
@@ -94,8 +104,8 @@ class Game:
   def draw(self):
     self.screen.fill((0, 0, 0))
     self.all_sprites.draw(self.screen)
-    self.draw_text(self.screen, 'asdfasdfasdfd', 24, WHITE, WIDTH/2, HEIGHT/2)
-    self.draw_text(self.screen, str(self.dt), 24, WHITE, WIDTH/30, HEIGHT/30)
+    self.draw_text(self.screen, str(self.dt*1000), 24, WHITE, WIDTH/30, HEIGHT/30)
+    self.draw_text(self.screen, str(self.player.coin_count), 24, WHITE, WIDTH-100, 50)
     pg.display.flip()
 
 if __name__ == "__main__":
