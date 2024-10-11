@@ -5,18 +5,24 @@
 # this is where we import libraries and modules
 import pygame as pg
 from settings import *
-from sprites import *
+# from sprites import *
+from sprites_side_scroller import *
 from tilemap import *
 from os import path
 # we are editing this file after installing git
 
 '''
-GOALS: 
-RULES:
-FEEDBACK:
-FREEDOM:
+Elevator Pitch: create a first person shooter where a character has a blaster and must blast through the hordes of enemies.
+There were be a boss at the end with special powers.
 
-What's the sentence: Player 1 collides with enemy and enemy bounces off
+GOALS: To defeat the boss.
+RULES:, shoot gun, roll, waves of enemies
+FEEDBACK: health bar, enemy health, 
+FREEDOM: left and right movement, dodging. 
+
+What's the sentence: Player 1 shoots bullet at enemy and enemy takes damage...
+
+Alpha Goal: to create a first person shooter with dodging, collision and projectiles
 
 '''
 
