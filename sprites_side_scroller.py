@@ -34,14 +34,11 @@ class Player(Sprite):
         self.jumping = False
     def get_keys(self):
         keys = pg.key.get_pressed()
-        # if keys[pg.K_w]:
-        #     self.vy -= self.speed
-        if keys[pg.K_a]:
-            self.vel.x -= self.speed
-        # if keys[pg.K_s]:
-        #     self.vy += self.speed
+        self.vel.x = 0
+        if keys[pg.K_a]: 
+            self.vel.x = -self.speed
         if keys[pg.K_d]:
-            self.vel.x += self.speed
+            self.vel.x = self.speed
         if keys[pg.K_SPACE]:
             self.jump()
     def jump(self):
@@ -49,7 +46,7 @@ class Player(Sprite):
         print(self.vel.y)
         self.rect.y += 2
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
-        self.rect.y +=2
+        self.rect.y -= 2
         if hits and not self.jumping:
             self.jumping = True
             self.vel.y = -self.jump_power
@@ -73,10 +70,12 @@ class Player(Sprite):
             if hits:
                 if self.vel.y > 0:
                     self.pos.y = hits[0].rect.top - TILESIZE
+                    self.vel.y = 0
                 if self.vel.y < 0:
                     self.pos.y = hits[0].rect.bottom
                 self.vel.y = 0
                 self.rect.y = self.pos.y
+                self.jumping = False
                 # print("Collided on x axis")
         #     else:
         #         print("not working...for hits")
@@ -172,6 +171,26 @@ class Coin(Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
+
+class Camera:
+    def __init__(self, width, height):
+        self.camera = pg.Rect(0, 0, width, height)
+        self.width = width
+        self.height = height
+
+    def apply(self, entity):
+        return entity.rect.move(self.camera.topleft)
+
+    def update(self, target):
+        x = -target.rect.centerx + int(WIDTH / 2)
+        y = -target.rect.centery + int(HEIGHT / 2)
+
+        x = min(0, x)  
+        x = max(-(self.width - WIDTH), x)  
+        y = min(0, y) 
+        y = max(-(self.height - HEIGHT), y)  
+
+        self.camera = pg.Rect(x, y, self.width, self.height)
 
 
             
