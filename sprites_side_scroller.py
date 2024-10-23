@@ -1,4 +1,4 @@
-# This file was created by: Chris Cozort
+# This file was created by: Brayden Ho
 
 import pygame as pg
 from pygame.sprite import Sprite
@@ -27,20 +27,25 @@ class Player(Sprite):
         self.pos = vec(x*TILESIZE, y*TILESIZE)
         self.vel = vec(0,0)
         self.acc = vec(0,0)
-        self.speed = 5
+        self.speed = 1
         # self.vx, self.vy = 0, 0
         self.coin_count = 0
         self.jump_power = 20
         self.jumping = False
     def get_keys(self):
         keys = pg.key.get_pressed()
-        self.vel.x = 0
-        if keys[pg.K_a]: 
-            self.vel.x = -self.speed
+        # if keys[pg.K_w]:
+        #     self.vy -= self.speed
+        if keys[pg.K_a]:
+            self.vel.x -= 1
+        # if keys[pg.K_s]:
+        #     self.vy += self.speed
         if keys[pg.K_d]:
-            self.vel.x = self.speed
+            self.vel.x += 1
         if keys[pg.K_SPACE]:
             self.jump()
+        if keys[pg.K_f]:
+            self.shoot()
     def jump(self):
         print("im trying to jump")
         print(self.vel.y)
@@ -51,6 +56,10 @@ class Player(Sprite):
             self.jumping = True
             self.vel.y = -self.jump_power
             print('still trying to jump...')
+
+    def shoot(self):
+        direction = vec(1,0)
+        Bullet(self.game, self.rect.centerx, self.rect.centery, direction)
             
     def collide_with_walls(self, dir):
         if dir == 'x':
@@ -136,6 +145,10 @@ class Mob(Sprite):
         if self.rect.y > HEIGHT:
             self.rect.y = 0
 
+        hits = pg.sprite.spritecollide(self, self.game.all_bullets, True)
+        if hits:
+            self.kill()
+
         if self.rect.colliderect(self.game.player):
             self.speed *= -1
 
@@ -172,28 +185,22 @@ class Coin(Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
-class Camera:
-    def __init__(self, width, height):
-        self.camera = pg.Rect(0, 0, width, height)
-        self.width = width
-        self.height = height
+class Bullet(Sprite):
+    def __init__(self, game, x, y, direction):
+        self.groups = game.all_sprites, game.all_bullets
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((10, 10))  # Bullet size
+        self.image.fill(RED)  # Bullet color
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.speed = 10
+        self.direction = direction
 
-    def apply(self, entity):
-        return entity.rect.move(self.camera.topleft)
-
-    def update(self, target):
-        x = -target.rect.centerx + int(WIDTH / 2)
-        y = -target.rect.centery + int(HEIGHT / 2)
-
-        x = min(0, x)  
-        x = max(-(self.width - WIDTH), x)  
-        y = min(0, y) 
-        y = max(-(self.height - HEIGHT), y)  
-
-        self.camera = pg.Rect(x, y, self.width, self.height)
-
-
-            
-  
-
-
+    def update(self):
+        # Move the bullet in the direction
+        self.rect.x += self.speed * self.direction.x
+        self.rect.y += self.speed * self.direction.y
+        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT:
+            self.kill()
+        

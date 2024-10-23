@@ -1,7 +1,5 @@
 # this file was created by: Brayden Ho
 
-# this file was created by: Chris Cozort
-
 # this is where we import libraries and modules
 import pygame as pg
 from settings import *
@@ -16,9 +14,9 @@ Elevator Pitch: create a slide scroller where a character has a blaster and must
 There were be a boss at the end with special powers.
 
 GOALS: To defeat the boss.
-RULES:, shoot gun, roll, waves of enemies
+RULES:, shoot gun, waves of enemies
 FEEDBACK: health bar, enemy health, 
-FREEDOM: left and right movement, dodging. 
+FREEDOM: left and right movement, jumping.
 
 What's the sentence: Player 1 shoots bullet at enemy and enemy takes damage...
 
@@ -49,7 +47,7 @@ class Game:
     self.all_walls = pg.sprite.Group()
     self.all_powerups = pg.sprite.Group()
     self.all_coins = pg.sprite.Group()
-    self.all_camera = pg
+    self.all_bullets = pg.sprite.Group()
     # instantiating the class to create the player object 
     # self.player = Player(self, 5, 5)
     # self.mob = Mob(self, 100, 100)
@@ -72,8 +70,6 @@ class Game:
           Powerup(self, col, row)
         if tile == 'C':
           Coin(self, col, row)
-    for i in range(1000):
-      Powerup(self, randint(0,WIDTH), randint(0,HEIGHT))
 
 # this is a method
 # methods are like functions that are part of a class
@@ -98,23 +94,7 @@ class Game:
   # this is where the game updates the game state
   def update(self):
     # update all the sprites...and I MEAN ALL OF THEM
-    self.camera.update(self.player)
     self.all_sprites.update()
-    if self.player.vel.x > 0:
-        for sprite in self.all_sprites:
-            if sprite != self.player:
-                sprite.rect.x -= self.player.speed
-    if len([wall for wall in self.all_walls if wall.rect.right > WIDTH]) == 0:
-        self.spawn_new_wall()
-    if self.player.vel.x < 0:
-        for sprite in self.all_sprites:
-            if sprite != self.player:
-                sprite.rect.x -= self.player.speed
-    if len([wall for wall in self.all_walls if wall.rect.right > WIDTH]) == 0:
-        self.spawn_new_wall()
-    for wall in self.all_walls:
-        if wall.rect.right < 0:  
-            wall.kill()
   def draw_text(self, surface, text, size, color, x, y):
     font_name = pg.font.match_font('arial')
     font = pg.font.Font(font_name, size)
@@ -125,30 +105,16 @@ class Game:
 
   # output
   def draw(self):
-    self.screen.fill((0, 0, 0))
+    self.screen.fill(BLACK)
     self.all_sprites.draw(self.screen)
+    pg.display.flip()
     self.draw_text(self.screen, str(self.dt*1000), 24, WHITE, WIDTH/30, HEIGHT/30)
     self.draw_text(self.screen, str(self.player.coin_count), 24, WHITE, WIDTH-100, 50)
     pg.display.flip()
-    for sprite in self.all_sprites:
-       self.screen.blit(sprite.image, self.camera.apply(sprite))
-       self.draw_text(self.screen, str(self.player.coin_count), 24, WHITE, WIDTH-100, 50)
-       pg.display.flip()
 
-  def spawn_new_wall(self):
-    new_wall_x = WIDTH + TILESIZE 
-    new_wall_y = randint(0, HEIGHT // TILESIZE) * TILESIZE
-    Wall(self, new_wall_x, new_wall_y)
-  
-  def new(self):
-     self.load_data()
-     self.camera = Camera(self.map.width, self.map.height)
-    
 if __name__ == "__main__":
   # instantiate
-  print("main is running...")
   g = Game()
-  print("main is running...")
   g.new()
   g.run()
   

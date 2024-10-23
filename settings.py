@@ -5,7 +5,7 @@ WIDTH = 1024
 HEIGHT = 768
 
 GRAVITY = 0.8
-FRICTION = -0.11
+FRICTION = -0.12
 
 # colors
 BLACK = (0,0,0)
@@ -14,4 +14,4 @@ PINK = (255,155,155)
 RED = (255,0,0)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
-GOLD = (255,155,0)
+GOLD = (255,215,0)

@@ -1,5 +1,3 @@
-# This file was created by: Brayden Ho
-
 import pygame as pg
 from settings import *
 
