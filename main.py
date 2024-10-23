@@ -33,7 +33,7 @@ class Game:
     pg.mixer.init()
     self.clock = pg.time.Clock()
     self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-    pg.display.set_caption("Chris' Coolest Game Ever...")
+    pg.display.set_caption("Brayden' Coolest Game Ever...")
     self.playing = True
   # this is where the game creates the stuff you see and hear
   def load_data(self):

@@ -14,6 +14,7 @@ class Player(Sprite):
     # this initializes the properties of the player class including the x y location, and the game parameter so that the the player can interact logically with
     # other elements in the game...
     def __init__(self, game, x, y):
+        self.can_shoot = True
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
@@ -27,7 +28,7 @@ class Player(Sprite):
         self.pos = vec(x*TILESIZE, y*TILESIZE)
         self.vel = vec(0,0)
         self.acc = vec(0,0)
-        self.speed = 1
+        self.speed = 5
         # self.vx, self.vy = 0, 0
         self.coin_count = 0
         self.jump_power = 20
@@ -44,8 +45,11 @@ class Player(Sprite):
             self.vel.x += 1
         if keys[pg.K_SPACE]:
             self.jump()
-        if keys[pg.K_f]:
+        if keys[pg.K_f] and self.can_shoot:
             self.shoot()
+            self.can_shoot = False
+        if not keys[pg.K_f]:
+            self.can_shoot = True
     def jump(self):
         print("im trying to jump")
         print(self.vel.y)
@@ -194,7 +198,7 @@ class Bullet(Sprite):
         self.image.fill(RED)  # Bullet color
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.speed = 10
+        self.speed = 10 # Bullet speed
         self.direction = direction
 
     def update(self):
@@ -203,4 +207,18 @@ class Bullet(Sprite):
         self.rect.y += self.speed * self.direction.y
         if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT:
             self.kill()
+
+class Camera:
+    def __init__(self, width, height):
+        self.camera = pg.rect(0, 0, width, height)
+        self.width = width
+        self.height = height
+
+    def apply(self, player):
+        return player.rect.move(self.camera.topleft)
+    
+    def update(self, player):
+        x = -player.rect.centerx + int(WIDTH / 2)
+        y = -player.rect.centery + int(WIDTH / 2)
+
         
