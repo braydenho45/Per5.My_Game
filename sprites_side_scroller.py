@@ -7,8 +7,6 @@ from random import randint
 
 vec = pg.math.Vector2
 
-
-
 # create the player class with a superclass of Sprite
 class Player(Sprite):
     # this initializes the properties of the player class including the x y location, and the game parameter so that the the player can interact logically with
@@ -45,11 +43,11 @@ class Player(Sprite):
             self.vel.x += 1
         if keys[pg.K_SPACE]:
             self.jump()
-        if keys[pg.K_f] and self.can_shoot:
+        if keys[pg.K_f] and self.can_shoot: # ensures the bullet is only shot when it is true
             self.shoot()
             self.can_shoot = False
         if not keys[pg.K_f]:
-            self.can_shoot = True
+            self.can_shoot = True # key that is used to fire the bullet
     def jump(self):
         print("im trying to jump")
         print(self.vel.y)
@@ -62,8 +60,8 @@ class Player(Sprite):
             print('still trying to jump...')
 
     def shoot(self):
-        direction = vec(1,0)
-        Bullet(self.game, self.rect.centerx, self.rect.centery, direction)
+        direction = vec(1,0) # determines the space between each bullet
+        Bullet(self.game, self.rect.centerx, self.rect.centery, direction) # determines location of bullet and the direction it is being fired at
             
     def collide_with_walls(self, dir):
         if dir == 'x':
@@ -133,8 +131,8 @@ class Mob(Sprite):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((32, 32))
-        self.image.fill(GREEN)
+        self.image = pg.Surface((32, 32)) # Mob Size
+        self.image.fill(GREEN) # Mob color
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
@@ -149,7 +147,7 @@ class Mob(Sprite):
         if self.rect.y > HEIGHT:
             self.rect.y = 0
 
-        hits = pg.sprite.spritecollide(self, self.game.all_bullets, True)
+        hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
         if hits:
             self.kill()
 
@@ -183,42 +181,30 @@ class Coin(Sprite):
         self.groups = game.all_sprites, game.all_coins
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(GOLD)
+        self.image = pg.Surface((TILESIZE, TILESIZE)) # coin size
+        self.image.fill(GOLD) # coin color
         self.rect = self.image.get_rect()
-        self.rect.x = x * TILESIZE
-        self.rect.y = y * TILESIZE
+        self.rect.x = x * TILESIZE # sets the sprite to a certain point on x axis based on tilsize
+        self.rect.y = y * TILESIZE # sets the sprite to a certain point on y axis based on tilsize
 
 class Bullet(Sprite):
-    def __init__(self, game, x, y, direction):
-        self.groups = game.all_sprites, game.all_bullets
-        Sprite.__init__(self, self.groups)
+    def __init__(self, game, x, y, direction): # defining the bullet class
+        self.groups = game.all_sprites, game.all_bullets # assigns the sprite to two groups
+        Sprite.__init__(self, self.groups) # makes it apart of pygames sprite system
         self.game = game
         self.image = pg.Surface((10, 10))  # Bullet size
         self.image.fill(RED)  # Bullet color
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
+        self.rect = self.image.get_rect() # gets the area of the bullet. which is used for collision
+        self.rect.center = (x, y) # sets the inital position of the bullet
         self.speed = 10 # Bullet speed
-        self.direction = direction
+        self.direction = direction # defines the direction the bullet will move in 
 
     def update(self):
-        # Move the bullet in the direction
-        self.rect.x += self.speed * self.direction.x
-        self.rect.y += self.speed * self.direction.y
-        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT:
+        self.rect.x += self.speed * self.direction.x # updates the bullets position based on speed and direction
+        self.rect.y += self.speed * self.direction.y 
+        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT: # determines if the bullet is moved off screen, causing it to be killed
             self.kill()
 
-class Camera:
-    def __init__(self, width, height):
-        self.camera = pg.rect(0, 0, width, height)
-        self.width = width
-        self.height = height
 
-    def apply(self, player):
-        return player.rect.move(self.camera.topleft)
-    
-    def update(self, player):
-        x = -player.rect.centerx + int(WIDTH / 2)
-        y = -player.rect.centery + int(WIDTH / 2)
 
         

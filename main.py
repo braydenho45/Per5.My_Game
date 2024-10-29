@@ -47,7 +47,7 @@ class Game:
     self.all_walls = pg.sprite.Group()
     self.all_powerups = pg.sprite.Group()
     self.all_coins = pg.sprite.Group()
-    self.all_bullets = pg.sprite.Group()
+    self.all_bullets = pg.sprite.Group() #adding bullets into main
     # instantiating the class to create the player object 
     # self.player = Player(self, 5, 5)
     # self.mob = Mob(self, 100, 100)
@@ -56,6 +56,7 @@ class Game:
     # for i in range(12):
     #   Wall(self, TILESIZE*i, HEIGHT/2)
     #   Mob(self, TILESIZE*i, TILESIZE*i)
+    # attributes for each sprite
     for row, tiles in enumerate(self.map.data):
       print(row*TILESIZE)
       for col, tile in enumerate(tiles):
@@ -66,7 +67,7 @@ class Game:
           Mob(self, col, row)
         if tile == 'P':
           self.player = Player(self, col, row)
-        if tile == 'U':
+        if tile == 'U': 
           Powerup(self, col, row)
         if tile == 'C':
           Coin(self, col, row)
@@ -105,10 +106,12 @@ class Game:
 
   # output
   def draw(self):
+    # makes the entire screen black and draws all sprites
     self.screen.fill(BLACK)
     self.all_sprites.draw(self.screen)
-    pg.display.flip()
+    #displays frame rate
     self.draw_text(self.screen, str(self.dt*1000), 24, WHITE, WIDTH/30, HEIGHT/30)
+    #displays coin count
     self.draw_text(self.screen, str(self.player.coin_count), 24, WHITE, WIDTH-100, 50)
     pg.display.flip()
 
