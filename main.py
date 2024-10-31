@@ -10,12 +10,21 @@ from os import path
 # we are editing this file after installing git
 
 '''
+
+Sources: Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets)
+
+Design Goals: 
+make the player and mobs be able to shoot bullets
+create health bars for the player and mobs
+create a camera that follows the player around the map
+extend the level 1 map.
+
 Elevator Pitch: create a slide scroller where a character has a blaster and must blast through the hordes of enemies.
 There were be a boss at the end with special powers.
 
 GOALS: To defeat the boss.
 RULES:, shoot gun, waves of enemies
-FEEDBACK: health bar, enemy health, 
+FEEDBACK: health bar, enemy health 
 FREEDOM: left and right movement, jumping.
 
 What's the sentence: Player 1 shoots bullet at enemy and enemy takes damage...
