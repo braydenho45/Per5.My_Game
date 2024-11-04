@@ -7,6 +7,30 @@ from random import randint
 
 vec = pg.math.Vector2
 
+# defines the health bar function
+def draw_health_bar(surface, x, y, health, max_health):
+        # length and width of bar
+        bar_length = 30
+        bar_height = 15
+        # percentage of current health based on max health
+        fill = (health / max_health) * bar_length
+        #outline of health bar
+        outline_rect = pg.Rect(x, y, bar_length, bar_height)
+        # filled portion of bar
+        fill_rect = pg.Rect(x, y, fill, bar_height)
+        # if health is over half, bar is green
+        if health > max_health * 0.5:
+            color = GREEN
+        # if health is below 50 but less than 20, bar is yellow
+        elif health > max_health * 0.2:
+            color = pg.Color('yellow')
+        # if health is below 20, bar is red
+        else:
+            color = RED
+        pg.draw.rect(surface, color, fill_rect)
+        # draws white border around health bar
+        pg.draw.rect(surface, WHITE, outline_rect, 2)
+
 # create the player class with a superclass of Sprite
 class Player(Sprite):
     # this initializes the properties of the player class including the x y location, and the game parameter so that the the player can interact logically with
@@ -31,6 +55,9 @@ class Player(Sprite):
         self.coin_count = 0
         self.jump_power = 20
         self.jumping = False
+        # health attributes
+        self.health = 100 
+        self.max_health = 100
     def get_keys(self):
         keys = pg.key.get_pressed()
         # if keys[pg.K_w]:
@@ -132,11 +159,13 @@ class Mob(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((32, 32)) # Mob Size
-        self.image.fill(GREEN) # Mob color
+        self.image.fill(PINK) # Mob color
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
-        self.speed = 25
+        self.speed = 10
+        self.health = 100
+        self.max_health = 100
 
     def update(self):
         self.rect.x += self.speed
@@ -149,7 +178,11 @@ class Mob(Sprite):
 
         hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
         if hits:
-            self.kill()
+            # health taken per hit
+            self.health -= 20
+            # health below or equal to 0, kill mob
+            if self.health <= 0:
+                self.kill()
 
         if self.rect.colliderect(self.game.player):
             self.speed *= -1

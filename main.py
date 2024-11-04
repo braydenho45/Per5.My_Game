@@ -11,8 +11,6 @@ from os import path
 
 '''
 
-Sources: Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets)
-
 Design Goals: 
 make the player and mobs be able to shoot bullets
 create health bars for the player and mobs
@@ -30,6 +28,10 @@ FREEDOM: left and right movement, jumping.
 What's the sentence: Player 1 shoots bullet at enemy and enemy takes damage...
 
 Alpha Goal: to create a first person shooter with dodging, collision and projectiles
+
+Sources: Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets):
+used to allow player to fire bullets
+
 
 '''
 
@@ -118,6 +120,14 @@ class Game:
     # makes the entire screen black and draws all sprites
     self.screen.fill(BLACK)
     self.all_sprites.draw(self.screen)
+    # determines position of health bar above player and determines current and max health
+    draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y - 10, self.player.health, self.player.max_health)
+    # checks all sprites in self.all_sprites
+    for sprite in self.all_sprites:
+      # only applies it to Mob
+      if isinstance(sprite, Mob): 
+        # uses the same code for Mob class
+          draw_health_bar(self.screen, sprite.rect.x, sprite.rect.y - 10, sprite.health, sprite.max_health)
     #displays frame rate
     self.draw_text(self.screen, str(self.dt*1000), 24, WHITE, WIDTH/30, HEIGHT/30)
     #displays coin count
