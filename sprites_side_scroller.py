@@ -50,7 +50,7 @@ class Player(Sprite):
         self.pos = vec(x*TILESIZE, y*TILESIZE)
         self.vel = vec(0,0)
         self.acc = vec(0,0)
-        self.speed = 5
+        self.speed = 10
         # self.vx, self.vy = 0, 0
         self.coin_count = 0
         self.jump_power = 20
@@ -128,6 +128,11 @@ class Player(Sprite):
             if str(hits[0].__class__.__name__) == "Coin":
                 print("I got a coin!!!")
                 self.coin_count += 1
+    
+    def take_damage(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            self.kill
 
     def update(self):
         self.acc = vec(0, GRAVITY)
@@ -186,14 +191,19 @@ class Mob(Sprite):
 
         if self.rect.colliderect(self.game.player):
             self.speed *= -1
+    
+    def take_damage(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            self.kill()
 
 class Wall(Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, wall_color):
         self.groups = game.all_sprites, game.all_walls
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(BLUE)
+        self.image.fill(wall_color)
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
@@ -238,6 +248,26 @@ class Bullet(Sprite):
         if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT: # determines if the bullet is moved off screen, causing it to be killed
             self.kill()
 
+class Camera:
+    #defines height and width
+    def __init__(self, width, height):
+        self.camera = pg.Rect(0, 0, width, height)
+        # determines the width and height of camera
+        self.width = width
+        self.height = height
+
+    def apply(self, sprite):
+        #offsets sprites depending on camera position
+        return sprite.rect.move(-self.camera.x, -self.camera.y)
+    
+    def update(self, player):
+        #places player in center of camera and clamps camera position between 0 and height and width
+        self.camera.x = player.rect.centerx - WIDTH // 2
+        self.camera.y = player.rect.centery - HEIGHT // 2
+        self.camera.y = max(0, min(self.camera.y, self.height - HEIGHT))
+        self.camera.x = max(0, min(self.camera.x, self.width - WIDTH))
+        
+      
 
 
         

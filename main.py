@@ -1,6 +1,7 @@
 # this file was created by: Brayden Ho
 
 # this is where we import libraries and modules
+import random
 import pygame as pg
 from settings import *
 # from sprites import *
@@ -68,12 +69,14 @@ class Game:
     #   Wall(self, TILESIZE*i, HEIGHT/2)
     #   Mob(self, TILESIZE*i, TILESIZE*i)
     # attributes for each sprite
+    WALL_COLORS = [pg.Color('grey'), pg.Color('brown'), pg.Color('green'), pg.Color('gold'), pg.Color('tan')]
     for row, tiles in enumerate(self.map.data):
       print(row*TILESIZE)
       for col, tile in enumerate(tiles):
         print(col*TILESIZE)
         if tile == '1':
-          Wall(self, col, row)
+          wall_color = random.choice(WALL_COLORS)
+          Wall(self, col, row, wall_color)
         if tile == 'M':
           Mob(self, col, row)
         if tile == 'P':
@@ -82,6 +85,8 @@ class Game:
           Powerup(self, col, row)
         if tile == 'C':
           Coin(self, col, row)
+
+    self.camera = Camera(self.map.width * TILESIZE, self.map.height * TILESIZE) #calcualtes total width and height of map for camera to stay inbounds
 
 # this is a method
 # methods are like functions that are part of a class
@@ -105,8 +110,8 @@ class Game:
   # process
   # this is where the game updates the game state
   def update(self):
-    # update all the sprites...and I MEAN ALL OF THEM
     self.all_sprites.update()
+    self.camera.update(self.player)
   def draw_text(self, surface, text, size, color, x, y):
     font_name = pg.font.match_font('arial')
     font = pg.font.Font(font_name, size)
@@ -119,20 +124,22 @@ class Game:
   def draw(self):
     # makes the entire screen black and draws all sprites
     self.screen.fill(BLACK)
-    self.all_sprites.draw(self.screen)
-    # determines position of health bar above player and determines current and max health
-    draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y - 10, self.player.health, self.player.max_health)
-    # checks all sprites in self.all_sprites
     for sprite in self.all_sprites:
+      #creates each sprite based on camera position
+      self.screen.blit(sprite.image, self.camera.apply(sprite))
       # only applies it to Mob
-      if isinstance(sprite, Mob): 
+      if isinstance(sprite, Player):
+         # makes health bar follow player and mobs
+         draw_health_bar(self.screen, sprite.rect.x - self.camera.camera.x, sprite.rect.y - 10 - self.camera.camera.y, sprite.health, sprite.max_health)
+      elif isinstance(sprite, Mob): 
         # uses the same code for Mob class
-          draw_health_bar(self.screen, sprite.rect.x, sprite.rect.y - 10, sprite.health, sprite.max_health)
+          draw_health_bar(self.screen, sprite.rect.x - self.camera.camera.x, sprite.rect.y - 10 - self.camera.camera.y, sprite.health, sprite.max_health)
     #displays frame rate
     self.draw_text(self.screen, str(self.dt*1000), 24, WHITE, WIDTH/30, HEIGHT/30)
     #displays coin count
     self.draw_text(self.screen, str(self.player.coin_count), 24, WHITE, WIDTH-100, 50)
     pg.display.flip()
+
 
 if __name__ == "__main__":
   # instantiate
