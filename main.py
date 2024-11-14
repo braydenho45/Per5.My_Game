@@ -69,7 +69,7 @@ class Game:
     #   Wall(self, TILESIZE*i, HEIGHT/2)
     #   Mob(self, TILESIZE*i, TILESIZE*i)
     # attributes for each sprite
-    WALL_COLORS = [pg.Color('grey'), pg.Color('brown'), pg.Color('green'), pg.Color('gold'), pg.Color('tan')]
+    WALL_COLORS = [pg.Color('grey'), pg.Color('brown'), pg.Color('lightgrey'), pg.Color('darkgrey'), pg.Color('tan')]
     for row, tiles in enumerate(self.map.data):
       print(row*TILESIZE)
       for col, tile in enumerate(tiles):

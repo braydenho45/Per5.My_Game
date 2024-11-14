@@ -40,8 +40,8 @@ class Player(Sprite):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((32, 32))
-        self.image.fill((255, 0, 0))
+        self.image = pg.image.load('assets/player.png').convert_alpha()
+        self.image = pg.transform.scale(self.image, (100, 100))
         self.rect = self.image.get_rect()
         # self.rect.x = x
         # self.rect.y = y
@@ -50,6 +50,8 @@ class Player(Sprite):
         self.pos = vec(x*TILESIZE, y*TILESIZE)
         self.vel = vec(0,0)
         self.acc = vec(0,0)
+        self.find_spawn_position()
+        self.rect.midbottom = self.pos
         self.speed = 10
         # self.vx, self.vy = 0, 0
         self.coin_count = 0
@@ -60,14 +62,15 @@ class Player(Sprite):
         self.max_health = 100
     def get_keys(self):
         keys = pg.key.get_pressed()
+        self.acc = vec(0, GRAVITY)
         # if keys[pg.K_w]:
         #     self.vy -= self.speed
         if keys[pg.K_a]:
-            self.vel.x -= 1
+            self.vel.x = -PLAYER_ACC
         # if keys[pg.K_s]:
         #     self.vy += self.speed
         if keys[pg.K_d]:
-            self.vel.x += 1
+            self.vel.x = PLAYER_ACC
         if keys[pg.K_SPACE]:
             self.jump()
         if keys[pg.K_f] and self.can_shoot: # ensures the bullet is only shot when it is true
@@ -75,12 +78,13 @@ class Player(Sprite):
             self.can_shoot = False
         if not keys[pg.K_f]:
             self.can_shoot = True # key that is used to fire the bullet
+
     def jump(self):
         print("im trying to jump")
         print(self.vel.y)
-        self.rect.y += 2
+        self.rect.y += 1
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
-        self.rect.y -= 2
+        self.rect.y -= 1
         if hits and not self.jumping:
             self.jumping = True
             self.vel.y = -self.jump_power
@@ -95,9 +99,9 @@ class Player(Sprite):
             hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
             if hits:
                 if self.vel.x > 0:
-                    self.pos.x = hits[0].rect.left - TILESIZE
+                    self.pos.x = hits[0].rect.left - self.rect.width
                 if self.vel.x < 0:
-                    self.pos.x = hits[0].rect.right
+                    self.pos.x = hits[0].rect.right 
                 self.vel.x = 0
                 self.rect.x = self.pos.x
             #     print("Collided on x axis")
@@ -107,13 +111,12 @@ class Player(Sprite):
             hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
             if hits:
                 if self.vel.y > 0:
-                    self.pos.y = hits[0].rect.top - TILESIZE
-                    self.vel.y = 0
-                if self.vel.y < 0:
-                    self.pos.y = hits[0].rect.bottom
+                    self.pos.y = hits[0].rect.top - self.rect.height 
+                    self.jumping = False
+                elif self.vel.y < 0:
+                    self.pos.y = hits[0].rect.bottom 
                 self.vel.y = 0
                 self.rect.y = self.pos.y
-                self.jumping = False
                 # print("Collided on x axis")
         #     else:
         #         print("not working...for hits")
@@ -137,24 +140,37 @@ class Player(Sprite):
     def update(self):
         self.acc = vec(0, GRAVITY)
         self.get_keys()
-        # self.x += self.vx * self.game.dt
-        # self.y += self.vy * self.game.dt
         self.acc.x += self.vel.x * FRICTION
         self.vel += self.acc
-
-        if abs(self.vel.x) < 0.1:
-            self.vel.x = 0
-
         self.pos += self.vel + 0.5 * self.acc
-
-        self.rect.x = self.pos.x
+        self.rect.midbottom = self.pos
         self.collide_with_walls('x')
-
-        self.rect.y = self.pos.y
+        self.rect.x = round(self.pos.x)
         self.collide_with_walls('y')
+        self.rect.y = round(self.pos.y)
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
+        if hits:
+            self.jumping = False
+
+        #if self.pos.x > WIDTH:
+           # self.pos.x = 0
+       # if self.pos.x < 0:
+          #  self.pos.x = WIDTH
+
         # teleport the player to the other side of the screen
         self.collide_with_stuff(self.game.all_powerups, True)
         self.collide_with_stuff(self.game.all_coins, True)
+
+    def find_spawn_position(self):
+        position_found = False
+        while not position_found:
+            self.rect.topleft = self.pos
+        if not pg.sprite.spritecollide(self, self.game.all_walls, False):
+            position_found = True
+        else:
+            self.pos.x += TILESIZE  
+            self.pos.y += TILESIZE
+            self.rect.midbottom = self.pos
 
 # added Mob - moving objects
 # it is a child class of Sprite
