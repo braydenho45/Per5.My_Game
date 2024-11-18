@@ -45,15 +45,20 @@ class Game:
     pg.mixer.init()
     self.clock = pg.time.Clock()
     self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-    pg.display.set_caption("Brayden' Coolest Game Ever...")
+    pg.display.set_caption("Braydens' Coolest Game Ever...")
     self.playing = True
+    self.running = True
   # this is where the game creates the stuff you see and hear
   def load_data(self):
     self.game_folder = path.dirname(__file__)
-    self.map = Map(path.join(self.game_folder, 'level1.txt'))
+    try:
+        self.map = Map(path.join(self.game_folder, 'level1.txt'))
+    except:
+      print("Error: Map file 'level1.txt' not found!")
+    self.running = False
+
   def new(self):
     self.load_data()
-    print(self.map.data)
     # create the all sprites group to allow for batch updates and draw methods
     self.all_sprites = pg.sprite.Group()
     self.all_walls = pg.sprite.Group()
@@ -101,17 +106,22 @@ class Game:
       # output
       self.draw()
 
-    pg.quit()
   # input
   def events(self):
     for event in pg.event.get():
         if event.type == pg.QUIT:
           self.playing = False
+          self.running = False
+        elif event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+              self.playing = False
+              self.running = False
   # process
   # this is where the game updates the game state
   def update(self):
     self.all_sprites.update()
     self.camera.update(self.player)
+
   def draw_text(self, surface, text, size, color, x, y):
     font_name = pg.font.match_font('arial')
     font = pg.font.Font(font_name, size)
@@ -145,5 +155,7 @@ if __name__ == "__main__":
   # instantiate
   g = Game()
   g.new()
-  g.run()
+  while g.running:
+    g.run()
+  pg.quit()
   

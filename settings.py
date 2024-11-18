@@ -1,4 +1,4 @@
-FPS = 30
+FPS = 60
 TILESIZE = 32
 
 WIDTH = 650

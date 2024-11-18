@@ -36,30 +36,25 @@ class Player(Sprite):
     # this initializes the properties of the player class including the x y location, and the game parameter so that the the player can interact logically with
     # other elements in the game...
     def __init__(self, game, x, y):
-        self.can_shoot = True
-        self.groups = game.all_sprites
-        Sprite.__init__(self, self.groups)
+        super().__init__(game.all_sprites)  
         self.game = game
         self.image = pg.image.load('assets/player.png').convert_alpha()
         self.image = pg.transform.scale(self.image, (100, 100))
         self.rect = self.image.get_rect()
-        # self.rect.x = x
-        # self.rect.y = y
-        # self.x = x * TILESIZE
-        # self.y = y * TILESIZE
-        self.pos = vec(x*TILESIZE, y*TILESIZE)
+        self.pos = vec(x * TILESIZE, y * TILESIZE)
         self.vel = vec(0,0)
         self.acc = vec(0,0)
-        self.find_spawn_position()
-        self.rect.midbottom = self.pos
         self.speed = 10
-        # self.vx, self.vy = 0, 0
         self.coin_count = 0
         self.jump_power = 20
         self.jumping = False
         # health attributes
         self.health = 100 
         self.max_health = 100
+        self.can_shoot = True
+        self.facing = vec(1, 0)
+        self.find_spawn_position()
+
     def get_keys(self):
         keys = pg.key.get_pressed()
         self.acc = vec(0, GRAVITY)
@@ -67,16 +62,18 @@ class Player(Sprite):
         #     self.vy -= self.speed
         if keys[pg.K_a]:
             self.vel.x = -PLAYER_ACC
+            self.facing = vec(-1, 0)
         # if keys[pg.K_s]:
         #     self.vy += self.speed
         if keys[pg.K_d]:
             self.vel.x = PLAYER_ACC
+            self.facing = vec(1, 0)
         if keys[pg.K_SPACE]:
             self.jump()
         if keys[pg.K_f] and self.can_shoot: # ensures the bullet is only shot when it is true
             self.shoot()
             self.can_shoot = False
-        if not keys[pg.K_f]:
+        elif not keys[pg.K_f]:
             self.can_shoot = True # key that is used to fire the bullet
 
     def jump(self):
@@ -92,7 +89,7 @@ class Player(Sprite):
 
     def shoot(self):
         direction = vec(1,0) # determines the space between each bullet
-        Bullet(self.game, self.rect.centerx, self.rect.centery, direction) # determines location of bullet and the direction it is being fired at
+        Bullet(self.game, self.rect.centerx, self.rect.centery, self.facing) # determines location of bullet and the direction it is being fired at
             
     def collide_with_walls(self, dir):
         if dir == 'x':
@@ -107,7 +104,7 @@ class Player(Sprite):
             #     print("Collided on x axis")
             # else:
             #     print("not working...for hits")
-        if dir == 'y':
+        elif dir == 'y':
             hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
             if hits:
                 if self.vel.y > 0:
@@ -124,7 +121,7 @@ class Player(Sprite):
         #     print("not working for dir check")
     def collide_with_stuff(self, group, kill):
         hits = pg.sprite.spritecollide(self, group, kill)
-        if hits:
+        for hits in hits:
             if str(hits[0].__class__.__name__) == "Powerup":
                 self.speed += 20
                 print("I've gotten a powerup!")
@@ -135,7 +132,20 @@ class Player(Sprite):
     def take_damage(self, amount):
         self.health -= amount
         if self.health <= 0:
-            self.kill
+            self.kill()
+
+    def find_spawn_position(self):
+        screen_width = 650
+        screen_height = 475
+        position_found = False
+        while not position_found:
+            self.rect.topleft = self.pos
+        if not pg.sprite.spritecollide(self, self.game.all_walls, False):
+            position_found = True
+        else:
+            self.pos.x += TILESIZE  
+            self.pos.y += TILESIZE
+            self.rect.midbottom = (screen_width // 2, screen_height - 10)
 
     def update(self):
         self.acc = vec(0, GRAVITY)
@@ -160,17 +170,6 @@ class Player(Sprite):
         # teleport the player to the other side of the screen
         self.collide_with_stuff(self.game.all_powerups, True)
         self.collide_with_stuff(self.game.all_coins, True)
-
-    def find_spawn_position(self):
-        position_found = False
-        while not position_found:
-            self.rect.topleft = self.pos
-        if not pg.sprite.spritecollide(self, self.game.all_walls, False):
-            position_found = True
-        else:
-            self.pos.x += TILESIZE  
-            self.pos.y += TILESIZE
-            self.rect.midbottom = self.pos
 
 # added Mob - moving objects
 # it is a child class of Sprite
