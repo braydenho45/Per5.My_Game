@@ -132,6 +132,7 @@ class Player(Sprite):
     def take_damage(self, amount):
         self.health -= amount
         if self.health <= 0:
+            print("Player has died!")
             self.kill()
 
     def find_spawn_position(self):
@@ -183,33 +184,58 @@ class Mob(Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
-        self.speed = 10
+        self.speed = 5
         self.health = 100
         self.max_health = 100
+        self.last_shot = pg.time.get_ticks()
+        self.shoot_cooldown = 2000
 
-    def update(self):
-        self.rect.x += self.speed
-        # self.rect.y += self.speed
-        if self.rect.x > WIDTH or self.rect.x < 0:
-            self.speed *= -1
-            self.rect.y += 32
-        if self.rect.y > HEIGHT:
-            self.rect.y = 0
+    def shoot(self):
+        now = pg.time.get_ticks()
+        if now - self.last_shot > self.shoot_cooldown:
+            self.last_shot = now
+            direction = pg.math.Vector2(self.game.player.rect.centerx - self.rect.centerx,self.game.player.rect.centery - self.rect.centery).normalize()
+            MobBullet(self.game, self.rect.centerx, self.rect.centery, direction)
 
-        hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
-        if hits:
-            # health taken per hit
-            self.health -= 20
-            # health below or equal to 0, kill mob
-            if self.health <= 0:
-                self.kill()
-
-        if self.rect.colliderect(self.game.player):
-            self.speed *= -1
-    
     def take_damage(self, amount):
         self.health -= amount
         if self.health <= 0:
+            self.kill()
+
+    def update(self):
+        player_pos = self.game.player.rect.center
+        mob_pos = self.rect.center
+        direction = pg.math.Vector2(player_pos[0] - mob_pos[0], player_pos[1] - mob_pos[1])
+        if direction.length() > 0:
+            direction = direction.normalize()
+            self.rect.x += direction.x * self.speed
+            self.rect.y += direction.y * self.speed
+            self.shoot()
+        if self.rect.colliderect(self.game.player.rect):
+            self.game.player.take_damage(10)  # Inflict damage on the player
+        hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
+        for _ in hits:
+           self.take_damage(20)
+
+class MobBullet(Sprite):
+    def __init__(self, game, x, y, direction):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((8, 8))  # Smaller bullet size
+        self.image.fill(GOLD)  # Mob bullet color
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.speed = 5
+        self.direction = direction
+
+    def update(self):
+        self.rect.x += self.speed * self.direction.x
+        self.rect.y += self.speed * self.direction.y
+        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT:
+            self.kill()
+        if self.rect.colliderect(self.game.player.rect):
+            self.game.player.take_damage(10)  # Deal 10 damage to the player
             self.kill()
 
 class Wall(Sprite):
