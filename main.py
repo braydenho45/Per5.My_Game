@@ -51,11 +51,10 @@ class Game:
   # this is where the game creates the stuff you see and hear
   def load_data(self):
     self.game_folder = path.dirname(__file__)
-    try:
-        self.map = Map(path.join(self.game_folder, 'level1.txt'))
-    except:
-      print("Error: Map file 'level1.txt' not found!")
-    self.running = False
+    map_file = path.join(self.game_folder, 'level1.txt')
+    if not path.exists(map_file):
+        raise FileNotFoundError("Map file 'level1.txt' not found!")
+    self.map = Map(map_file)
 
   def new(self):
     self.load_data()
@@ -82,13 +81,13 @@ class Game:
         if tile == '1':
           wall_color = random.choice(WALL_COLORS)
           Wall(self, col, row, wall_color)
-        if tile == 'M':
+        elif tile == 'M':
           Mob(self, col, row)
-        if tile == 'P':
+        elif tile == 'P':
           self.player = Player(self, col, row)
-        if tile == 'U': 
+        elif tile == 'U': 
           Powerup(self, col, row)
-        if tile == 'C':
+        elif tile == 'C':
           Coin(self, col, row)
 
     self.camera = Camera(self.map.width * TILESIZE, self.map.height * TILESIZE) #calcualtes total width and height of map for camera to stay inbounds

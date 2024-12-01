@@ -307,6 +307,28 @@ class Camera:
         self.camera.y = player.rect.centery - HEIGHT // 2
         self.camera.y = max(0, min(self.camera.y, self.height - HEIGHT))
         self.camera.x = max(0, min(self.camera.x, self.width - WIDTH))
+
+class Map:
+    def __init__(self, filename):
+        self.data = []
+        try:
+            with open(filename, 'rt') as f:
+                for line in f:
+                    self.data.append(line.strip())
+        except FileNotFoundError:
+            print(f"Error: Map file '{filename}' not found!")
+            raise
+        except Exception as e:
+            print(f"Error loading map file: {e}")
+            raise
+
+        if not self.data:
+            raise ValueError("Map file is empty or improperly formatted!")
+
+        self.tilewidth = len(self.data[0])
+        self.tileheight = len(self.data)
+        self.width = self.tilewidth * TILESIZE
+        self.height = self.tileheight * TILESIZE
         
       
 
