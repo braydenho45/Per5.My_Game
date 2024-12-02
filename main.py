@@ -96,14 +96,15 @@ class Game:
 # methods are like functions that are part of a class
 # the run method runs the game loop
   def run(self):
-    while self.playing:
-      self.dt = self.clock.tick(FPS) / 1000
-      # input
-      self.events()
-      # process
-      self.update()
-      # output
-      self.draw()
+      self.playing = True
+      while self.playing:
+        self.dt = self.clock.tick(FPS) / 1000
+        self.events()
+        self.update()
+        self.draw()
+        if self.player.health <= 0:
+          self.playing = False
+          self.game_over_screen()
 
   # input
   def events(self):
@@ -149,12 +150,34 @@ class Game:
     self.draw_text(self.screen, str(self.player.coin_count), 24, WHITE, WIDTH-100, 50)
     pg.display.flip()
 
+  def game_over_screen(self):
+    self.screen.fill(BLACK)
+    self.draw_text(self.screen, "GAME OVER", 64, RED, WIDTH // 2, HEIGHT // 4)
+    self.draw_text(self.screen, "Press R to Restart", 32, WHITE, WIDTH // 2, HEIGHT // 2)
+    self.draw_text(self.screen, "Press Q to Quit", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 50)
+    pg.display.flip()
+    waiting = True
+    while waiting:
+      for event in pg.event.get():
+        if event.type == pg.QUIT:
+            self.running = False
+            waiting = False
+        elif event.type == pg.KEYDOWN:
+          if event.key == pg.K_r:
+              self.playing = True
+              self.new()  # Start a new game
+              self.run()
+              waiting = False
+          elif event.key == pg.K_q:
+              self.running = False
+              waiting = False
+
 
 if __name__ == "__main__":
   # instantiate
   g = Game()
-  g.new()
   while g.running:
-    g.run()
+      g.new()
+      g.run()
   pg.quit()
   

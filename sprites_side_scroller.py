@@ -13,7 +13,7 @@ def draw_health_bar(surface, x, y, health, max_health):
         bar_length = 30
         bar_height = 15
         # percentage of current health based on max health
-        fill = (health / max_health) * bar_length
+        fill = max(0, (health / max_health) * bar_length)
         #outline of health bar
         outline_rect = pg.Rect(x, y, bar_length, bar_height)
         # filled portion of bar
@@ -38,8 +38,8 @@ class Player(Sprite):
     def __init__(self, game, x, y):
         super().__init__(game.all_sprites)  
         self.game = game
-        self.image = pg.image.load('assets/player.png').convert_alpha()
-        self.image = pg.transform.scale(self.image, (100, 100))
+        self.image = pg.Surface((32, 32))
+        self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.pos = vec(x * TILESIZE, y * TILESIZE)
         self.vel = vec(0,0)
@@ -48,12 +48,17 @@ class Player(Sprite):
         self.coin_count = 0
         self.jump_power = 20
         self.jumping = False
-        # health attributes
         self.health = 100 
         self.max_health = 100
         self.can_shoot = True
         self.facing = vec(1, 0)
-        self.find_spawn_position()
+        self.last_hit_time = 0
+
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
+        while hits:
+            self.pos.y -= 1
+            self.rect.midbottom = self.pos
+            hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
 
     def get_keys(self):
         keys = pg.key.get_pressed()
@@ -88,65 +93,32 @@ class Player(Sprite):
             print('still trying to jump...')
 
     def shoot(self):
-        direction = vec(1,0) # determines the space between each bullet
         Bullet(self.game, self.rect.centerx, self.rect.centery, self.facing) # determines location of bullet and the direction it is being fired at
             
     def collide_with_walls(self, dir):
-        if dir == 'x':
-            hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
-            if hits:
-                if self.vel.x > 0:
-                    self.pos.x = hits[0].rect.left - self.rect.width
-                if self.vel.x < 0:
-                    self.pos.x = hits[0].rect.right 
-                self.vel.x = 0
-                self.rect.x = self.pos.x
-            #     print("Collided on x axis")
-            # else:
-            #     print("not working...for hits")
-        elif dir == 'y':
-            hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
-            if hits:
-                if self.vel.y > 0:
-                    self.pos.y = hits[0].rect.top - self.rect.height 
-                    self.jumping = False
-                elif self.vel.y < 0:
-                    self.pos.y = hits[0].rect.bottom 
-                self.vel.y = 0
-                self.rect.y = self.pos.y
-                # print("Collided on x axis")
-        #     else:
-        #         print("not working...for hits")
-        # # else:
-        #     print("not working for dir check")
-    def collide_with_stuff(self, group, kill):
-        hits = pg.sprite.spritecollide(self, group, kill)
-        for hits in hits:
-            if str(hits[0].__class__.__name__) == "Powerup":
-                self.speed += 20
-                print("I've gotten a powerup!")
-            if str(hits[0].__class__.__name__) == "Coin":
-                print("I got a coin!!!")
-                self.coin_count += 1
-    
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
+        if hits:
+            for hit in hits:
+                if dir == 'x':
+                    if self.vel.x > 0:
+                        self.pos.x = hit.rect.left - self.rect.width
+                    elif self.vel.x < 0:
+                        self.pos.x = hit.rect.right 
+                    self.vel.x = 0
+                elif dir == 'y':
+                    if self.vel.y > 0:
+                        self.pos.y = hit.rect.top - self.rect.height 
+                        self.jumping = False
+                    elif self.vel.y < 0:
+                        self.pos.y = hit.rect.bottom 
+                    self.vel.y = 0
+        self.rect.topleft = self.pos
+
     def take_damage(self, amount):
         self.health -= amount
         if self.health <= 0:
             print("Player has died!")
             self.kill()
-
-    def find_spawn_position(self):
-        screen_width = 650
-        screen_height = 475
-        position_found = False
-        while not position_found:
-            self.rect.topleft = self.pos
-        if not pg.sprite.spritecollide(self, self.game.all_walls, False):
-            position_found = True
-        else:
-            self.pos.x += TILESIZE  
-            self.pos.y += TILESIZE
-            self.rect.midbottom = (screen_width // 2, screen_height - 10)
 
     def update(self):
         self.acc = vec(0, GRAVITY)
@@ -159,21 +131,7 @@ class Player(Sprite):
         self.rect.x = round(self.pos.x)
         self.collide_with_walls('y')
         self.rect.y = round(self.pos.y)
-        hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
-        if hits:
-            self.jumping = False
 
-        #if self.pos.x > WIDTH:
-           # self.pos.x = 0
-       # if self.pos.x < 0:
-          #  self.pos.x = WIDTH
-
-        # teleport the player to the other side of the screen
-        self.collide_with_stuff(self.game.all_powerups, True)
-        self.collide_with_stuff(self.game.all_coins, True)
-
-# added Mob - moving objects
-# it is a child class of Sprite
 class Mob(Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
@@ -184,7 +142,7 @@ class Mob(Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
-        self.speed = 5
+        self.speed = 2.5
         self.health = 100
         self.max_health = 100
         self.last_shot = pg.time.get_ticks()
@@ -200,6 +158,8 @@ class Mob(Sprite):
     def take_damage(self, amount):
         self.health -= amount
         if self.health <= 0:
+            self.game.playing = False
+            self.game.game_over_screen()
             self.kill()
 
     def update(self):
@@ -212,7 +172,10 @@ class Mob(Sprite):
             self.rect.y += direction.y * self.speed
             self.shoot()
         if self.rect.colliderect(self.game.player.rect):
-            self.game.player.take_damage(10)  # Inflict damage on the player
+            now = pg.time.get_ticks()
+            if now - self.game.player.last_hit_time > 500:
+                self.game.player.take_damage(10)  # Inflict damage on the player
+                self.game.player.last_hit_time = now
         hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
         for _ in hits:
            self.take_damage(20)
@@ -232,7 +195,7 @@ class MobBullet(Sprite):
     def update(self):
         self.rect.x += self.speed * self.direction.x
         self.rect.y += self.speed * self.direction.y
-        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT:
+        if not self.rect.colliderect(pg.Rect(0, 0, WIDTH, HEIGHT)):
             self.kill()
         if self.rect.colliderect(self.game.player.rect):
             self.game.player.take_damage(10)  # Deal 10 damage to the player
