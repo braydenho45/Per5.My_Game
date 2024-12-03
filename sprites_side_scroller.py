@@ -1,5 +1,6 @@
 # This file was created by: Brayden Ho
 
+import random
 import pygame as pg
 from pygame.sprite import Sprite
 from settings import *
@@ -53,6 +54,7 @@ class Player(Sprite):
         self.can_shoot = True
         self.facing = vec(1, 0)
         self.last_hit_time = 0
+        self.invincibility_time = 0  # Timer for invincibility
 
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
         while hits:
@@ -115,10 +117,13 @@ class Player(Sprite):
         self.rect.topleft = self.pos
 
     def take_damage(self, amount):
-        self.health -= amount
-        if self.health <= 0:
-            print("Player has died!")
-            self.kill()
+        now = pg.time.get_ticks()
+        if now - self.invincibility_time > 1000:  # Invincible for 1 second after damage
+            self.health -= amount
+            self.invincibility_time = now  # Reset invincibility timer
+            if self.health <= 0:
+                print("Player has died!")
+                self.kill()
 
     def update(self):
         self.acc = vec(0, GRAVITY)
@@ -128,9 +133,8 @@ class Player(Sprite):
         self.pos += self.vel + 0.5 * self.acc
         self.rect.midbottom = self.pos
         self.collide_with_walls('x')
-        self.rect.x = round(self.pos.x)
         self.collide_with_walls('y')
-        self.rect.y = round(self.pos.y)
+        self.rect.topleft = self.pos
 
 class Mob(Sprite):
     def __init__(self, game, x, y):
@@ -245,12 +249,20 @@ class Bullet(Sprite):
         self.rect.center = (x, y) # sets the inital position of the bullet
         self.speed = 10 # Bullet speed
         self.direction = direction # defines the direction the bullet will move in 
+        self.travel_distance = 0
+        self.max_distance = 500
 
     def update(self):
         self.rect.x += self.speed * self.direction.x # updates the bullets position based on speed and direction
         self.rect.y += self.speed * self.direction.y 
-        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT: # determines if the bullet is moved off screen, causing it to be killed
+        self.travel_distance += self.speed
+        if not self.rect.colliderect(pg.Rect(0, 0, WIDTH, HEIGHT)):
             self.kill()
+
+    def draw(self):
+        # We don't change bullet position here, just render it relative to the camera
+        self.game.camera.apply(self)  # Apply camera offset for drawing
+        self.game.screen.blit(self.image, self.rect)
 
 class Camera:
     #defines height and width
@@ -292,8 +304,75 @@ class Map:
         self.tileheight = len(self.data)
         self.width = self.tilewidth * TILESIZE
         self.height = self.tileheight * TILESIZE
-        
-      
 
+
+class DamagingFloor(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image.fill(pg.Color('green'))  
+        self.rect = self.image.get_rect()
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+        self.last_damage_time = 0
+    def update(self):
+        if self.rect.colliderect(self.game.player.rect):
+            now = pg.time.get_ticks()
+            # Apply damage only once every 500ms (adjust this value as needed)
+            if now - self.last_damage_time > 500:
+                self.game.player.take_damage(1)  # Damage the player
+                self.last_damage_time = now  # Update the last damage time
+
+class SpikeTrap(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image.fill('yellow')  
+        self.rect = self.image.get_rect()
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+    def update(self):
+        if self.rect.colliderect(self.game.player.rect):
+            now = pg.time.get_ticks()
+            if now - self.game.player.last_hit_time > 1000:  # Damage once per second
+                self.game.player.take_damage(10)
+                self.game.player.last_hit_time = now
+
+
+class MovingPlatform(Sprite):
+    def __init__(self, game, x, y, dx=2, dy=0):
+        self._layer = 1
+        self.groups = game.all_sprites, game.all_walls # Added to sprite groups
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))  # Platform size
+        self.image.fill(pg.Color('grey'))  # Platform color
+        self.rect = self.image.get_rect()
+        self.rect.x = x * TILESIZE  # Convert tile position to screen position
+        self.rect.y = y * TILESIZE
+        self.dx = dx  # Horizontal movement speed
+        self.dy = dy  # Vertical movement speed
+        self.original_x = self.rect.x  # Starting X position
+        self.original_y = self.rect.y  # Starting Y position
+        self.time = 0  # For managing the movement timing
+
+        
+    def update(self):
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+        # Bounce the platform when it hits the edges of the screen (or map bounds)
+        if self.rect.left <= 0 or self.rect.right >= WIDTH:
+            self.dx = -self.dx
+        if self.rect.top <= 0 or self.rect.bottom >= HEIGHT:
+            self.dy = -self.dy
+        # Apply platform movement to player if standing on the platform
+        for sprite in self.game.all_sprites:
+            if isinstance(sprite, Player) and self.rect.colliderect(sprite.rect):
+                sprite.rect.x += self.dx
+                sprite.rect.y += self.dy
 
         

@@ -30,9 +30,12 @@ What's the sentence: Player 1 shoots bullet at enemy and enemy takes damage...
 
 Alpha Goal: to create a first person shooter with dodging, collision and projectiles
 
-Sources: Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets):
+Sources: 
+1. Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets):
 used to allow player to fire bullets
-
+2. How to make a menu screen in pygame by baraltech: used to create main menu screen for game
+3. Learn pygame! #6 Game over screen: used to create a game over screen
+4. Projectiles and Enemy Behavior in pygame! Python Game Development Tutorial # 3: used to allow mobs to shoot bullets back at player and chase player.
 
 '''
 
@@ -119,14 +122,6 @@ class Game:
     self.all_powerups = pg.sprite.Group()
     self.all_coins = pg.sprite.Group()
     self.all_bullets = pg.sprite.Group() #adding bullets into main
-    # instantiating the class to create the player object 
-    # self.player = Player(self, 5, 5)
-    # self.mob = Mob(self, 100, 100)
-    # self.wall = Wall(self, WIDTH//2, HEIGHT//2)
-    # # instantiates wall and mob objects
-    # for i in range(12):
-    #   Wall(self, TILESIZE*i, HEIGHT/2)
-    #   Mob(self, TILESIZE*i, TILESIZE*i)
     # attributes for each sprite
     WALL_COLORS = [pg.Color('grey'), pg.Color('brown'), pg.Color('lightgrey'), pg.Color('darkgrey'), pg.Color('tan')]
     for row, tiles in enumerate(self.map.data):
@@ -144,6 +139,12 @@ class Game:
           Powerup(self, col, row)
         elif tile == 'C':
           Coin(self, col, row)
+        elif tile == 'D':  # Damaging Floor
+            DamagingFloor(self, col, row)
+        elif tile == 'S':  # Spike Trap
+            SpikeTrap(self, col, row)
+        elif tile == 'L':  # Moving Platform
+            MovingPlatform(self, col, row, dx=2, dy=0)
 
     self.camera = Camera(self.map.width * TILESIZE, self.map.height * TILESIZE) #calcualtes total width and height of map for camera to stay inbounds
 
