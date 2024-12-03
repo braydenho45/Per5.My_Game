@@ -48,6 +48,61 @@ class Game:
     pg.display.set_caption("Braydens' Coolest Game Ever...")
     self.playing = True
     self.running = True
+
+  def draw_text(self, surface, text, size, color, x, y):
+        font_name = pg.font.match_font('arial')
+        font = pg.font.Font(font_name, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.center = (x, y)
+        surface.blit(text_surface, text_rect)
+
+  def main_menu(self):
+        self.screen.fill(BLACK)
+        self.draw_text(self.screen, "Bullet Dash", 48, RED, WIDTH // 2, HEIGHT // 4)
+        self.draw_text(self.screen, "Press S to Start", 32, WHITE, WIDTH // 2, HEIGHT // 2)
+        self.draw_text(self.screen, "Press C for Controls", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 50)
+        self.draw_text(self.screen, "Press Q to Quit", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 100)
+        pg.display.flip()
+
+        waiting = True
+        while waiting:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.running = False
+                    waiting = False
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_s:
+                        waiting = False  # Start the game
+                        self.new()
+                        self.run()
+                    elif event.key == pg.K_c:
+                        self.instructions_screen()
+                    elif event.key == pg.K_q:
+                        self.running = False
+                        waiting = False
+
+  def instructions_screen(self):
+        self.screen.fill(BLACK)
+        self.draw_text(self.screen, "Controls", 48, WHITE, WIDTH // 2, HEIGHT // 4)
+        self.draw_text(self.screen, "Move with A and D, Jump with SPACE", 24, WHITE, WIDTH // 2, HEIGHT // 2)
+        self.draw_text(self.screen, "Shoot bullets with F", 24, WHITE, WIDTH // 2, HEIGHT // 2 + 40)
+        self.draw_text(self.screen, "Press M to return to Menu", 24, WHITE, WIDTH // 2, HEIGHT // 2 + 80)
+        self.draw_text(self.screen, "Goal: Kill enemies and reach end of level to progress", 24, WHITE, WIDTH // 2, HEIGHT // 2 + 120)
+        pg.display.flip()
+
+        waiting = True
+        while waiting:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.running = False
+                    waiting = False
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_m:
+                        waiting = False
+                        self.main_menu()
+
+  
   # this is where the game creates the stuff you see and hear
   def load_data(self):
     self.game_folder = path.dirname(__file__)
@@ -154,7 +209,8 @@ class Game:
     self.screen.fill(BLACK)
     self.draw_text(self.screen, "GAME OVER", 64, RED, WIDTH // 2, HEIGHT // 4)
     self.draw_text(self.screen, "Press R to Restart", 32, WHITE, WIDTH // 2, HEIGHT // 2)
-    self.draw_text(self.screen, "Press Q to Quit", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 50)
+    self.draw_text(self.screen, "Press M for Main Menu", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 50)
+    self.draw_text(self.screen, "Press Q to Quit", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 100)
     pg.display.flip()
     waiting = True
     while waiting:
@@ -168,6 +224,9 @@ class Game:
               self.new()  # Start a new game
               self.run()
               waiting = False
+          elif event.key == pg.K_m:  # Return to menu
+              self.main_menu()
+              ccwaiting = False
           elif event.key == pg.K_q:
               self.running = False
               waiting = False
@@ -176,6 +235,7 @@ class Game:
 if __name__ == "__main__":
   # instantiate
   g = Game()
+  g.main_menu()
   while g.running:
       g.new()
       g.run()
