@@ -39,15 +39,17 @@ class Player(Sprite):
     def __init__(self, game, x, y):
         super().__init__(game.all_sprites)  
         self.game = game
-        self.image = pg.Surface((32, 32))
-        self.image.fill(RED)
+        self.image = pg.image.load("images/player.gif")
+        self.image = pg.transform.scale(self.image, (50, 50))
+        self.original_image = self.image
         self.rect = self.image.get_rect()
-        self.pos = vec(x * TILESIZE, y * TILESIZE)
+        self.rect.midbottom = (x * TILESIZE, y * TILESIZE)
+        self.pos = vec(self.rect.center)
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.speed = 10
         self.coin_count = 0
-        self.jump_power = 20
+        self.jump_power = 12
         self.jumping = False
         self.health = 100 
         self.max_health = 100
@@ -69,12 +71,14 @@ class Player(Sprite):
         #     self.vy -= self.speed
         if keys[pg.K_a]:
             self.vel.x = -PLAYER_ACC
-            self.facing = vec(-1, 0)
+            self.direction = vec(-1,0)
+            self.image = pg.transform.flip(self.original_image, True, False)
         # if keys[pg.K_s]:
         #     self.vy += self.speed
-        if keys[pg.K_d]:
+        elif keys[pg.K_d]:
             self.vel.x = PLAYER_ACC
-            self.facing = vec(1, 0)
+            self.direction = vec(1,0)
+            self.image = self.original_image
         if keys[pg.K_SPACE]:
             self.jump()
         if keys[pg.K_f] and self.can_shoot: # ensures the bullet is only shot when it is true
@@ -96,6 +100,7 @@ class Player(Sprite):
 
     def shoot(self):
         Bullet(self.game, self.rect.centerx, self.rect.centery, self.facing) # determines location of bullet and the direction it is being fired at
+        self.facing = self.facing.normalize() if self.facing.length() > 0 else vec(1, 0)
             
     def collide_with_walls(self, dir):
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
@@ -103,13 +108,13 @@ class Player(Sprite):
             for hit in hits:
                 if dir == 'x':
                     if self.vel.x > 0:
-                        self.pos.x = hit.rect.left - self.rect.width
+                        self.pos.x = hit.rect.left - self.rect.width 
                     elif self.vel.x < 0:
                         self.pos.x = hit.rect.right 
                     self.vel.x = 0
                 elif dir == 'y':
                     if self.vel.y > 0:
-                        self.pos.y = hit.rect.top - self.rect.height 
+                        self.pos.y = hit.rect.top - self.rect.height
                         self.jumping = False
                     elif self.vel.y < 0:
                         self.pos.y = hit.rect.bottom 
@@ -141,8 +146,8 @@ class Mob(Sprite):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((32, 32)) # Mob Size
-        self.image.fill(PINK) # Mob color
+        self.image = pg.image.load("images/enemy.gif")
+        self.image = pg.transform.scale(self.image, (32, 32))
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
@@ -151,19 +156,20 @@ class Mob(Sprite):
         self.max_health = 100
         self.last_shot = pg.time.get_ticks()
         self.shoot_cooldown = 2000
+        self.facing_left = True
 
     def shoot(self):
         now = pg.time.get_ticks()
         if now - self.last_shot > self.shoot_cooldown:
             self.last_shot = now
-            direction = pg.math.Vector2(self.game.player.rect.centerx - self.rect.centerx,self.game.player.rect.centery - self.rect.centery).normalize()
-            MobBullet(self.game, self.rect.centerx, self.rect.centery, direction)
+            direction = pg.math.Vector2(self.game.player.rect.centerx - self.rect.centerx,self.game.player.rect.centery - self.rect.centery)
+            if direction.length() > 0:  # Check for zero-length vector
+                direction = direction.normalize()
+                MobBullet(self.game, self.rect.centerx, self.rect.centery, direction)
 
     def take_damage(self, amount):
         self.health -= amount
         if self.health <= 0:
-            self.game.playing = False
-            self.game.game_over_screen()
             self.kill()
 
     def update(self):
@@ -173,8 +179,8 @@ class Mob(Sprite):
         if direction.length() > 0:
             direction = direction.normalize()
             self.rect.x += direction.x * self.speed
-            self.rect.y += direction.y * self.speed
-            self.shoot()
+            self.rect.y += direction.y * self.speed     
+        self.shoot()
         if self.rect.colliderect(self.game.player.rect):
             now = pg.time.get_ticks()
             if now - self.game.player.last_hit_time > 500:
@@ -182,19 +188,22 @@ class Mob(Sprite):
                 self.game.player.last_hit_time = now
         hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
         for _ in hits:
-           self.take_damage(20)
+           self.take_damage(40)
 
 class MobBullet(Sprite):
     def __init__(self, game, x, y, direction):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((8, 8))  # Smaller bullet size
-        self.image.fill(GOLD)  # Mob bullet color
+        self.image = pg.image.load("images/bullet.gif")  # Smaller bullet size
+        self.image = pg.transform.scale(self.image, (32, 32))  # Mob bullet color
+        self.original_image = self.image
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.speed = 5
         self.direction = direction
+        if self.direction.x < 0:
+            self.image = pg.transform.flip(self.original_image, True, False)
 
     def update(self):
         self.rect.x += self.speed * self.direction.x
@@ -243,20 +252,22 @@ class Bullet(Sprite):
         self.groups = game.all_sprites, game.all_bullets # assigns the sprite to two groups
         Sprite.__init__(self, self.groups) # makes it apart of pygames sprite system
         self.game = game
-        self.image = pg.Surface((10, 10))  # Bullet size
-        self.image.fill(RED)  # Bullet color
+        self.image = pg.image.load("images/bullet.gif")  # Bullet size
+        self.image = pg.transform.scale(self.image, (32,32))  # Bullet color
+        self.original_image = self.image
         self.rect = self.image.get_rect() # gets the area of the bullet. which is used for collision
         self.rect.center = (x, y) # sets the inital position of the bullet
         self.speed = 10 # Bullet speed
         self.direction = direction # defines the direction the bullet will move in 
-        self.travel_distance = 0
-        self.max_distance = 500
+        if self.direction.x < 0:
+            self.image = pg.transform.flip(self.original_image, True, False)
+
 
     def update(self):
         self.rect.x += self.speed * self.direction.x # updates the bullets position based on speed and direction
         self.rect.y += self.speed * self.direction.y 
-        self.travel_distance += self.speed
-        if not self.rect.colliderect(pg.Rect(0, 0, WIDTH, HEIGHT)):
+
+        if not (0 <= self.rect.x <= self.game.map.width and 0 <= self.rect.y <= self.game.map.height):
             self.kill()
 
     def draw(self):
@@ -322,7 +333,7 @@ class DamagingFloor(Sprite):
             now = pg.time.get_ticks()
             # Apply damage only once every 500ms (adjust this value as needed)
             if now - self.last_damage_time > 500:
-                self.game.player.take_damage(1)  # Damage the player
+                self.game.player.take_damage(100)  # Damage the player
                 self.last_damage_time = now  # Update the last damage time
 
 class SpikeTrap(Sprite):
@@ -330,8 +341,8 @@ class SpikeTrap(Sprite):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill('yellow')  
+        self.image = pg.image.load("images/spike.gif")
+        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE

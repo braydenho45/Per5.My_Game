@@ -18,7 +18,7 @@ create health bars for the player and mobs
 create a camera that follows the player around the map
 extend the level 1 map.
 
-Elevator Pitch: create a slide scroller where a character has a blaster and must blast through the hordes of enemies.
+Elevator Pitch: create a slide scroller where a character has a blaster and must blast through the hordes of enemies and platform across dangerous territory.
 There were be a boss at the end with special powers.
 
 GOALS: To defeat the boss.
@@ -51,6 +51,7 @@ class Game:
     pg.display.set_caption("Braydens' Coolest Game Ever...")
     self.playing = True
     self.running = True
+    self.score = 0
 
   def draw_text(self, surface, text, size, color, x, y):
         font_name = pg.font.match_font('arial')
@@ -66,6 +67,7 @@ class Game:
         self.draw_text(self.screen, "Press S to Start", 32, WHITE, WIDTH // 2, HEIGHT // 2)
         self.draw_text(self.screen, "Press C for Controls", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 50)
         self.draw_text(self.screen, "Press Q to Quit", 32, WHITE, WIDTH // 2, HEIGHT // 2 + 100)
+
         pg.display.flip()
 
         waiting = True
@@ -109,6 +111,14 @@ class Game:
   # this is where the game creates the stuff you see and hear
   def load_data(self):
     self.game_folder = path.dirname(__file__)
+    # with open(path.join(self.game_folder, HS_FILE), 'w') as f:
+      # f.write(str(0))
+    try:
+      with open(path.join(self.game_folder, HS_FILE), 'r') as f:
+            self.highscore = int(f.read())
+    except:
+       with open(path.join(self.game_folder, HS_FILE), 'w') as f:
+            f.write(str(self.highscore)) 
     map_file = path.join(self.game_folder, 'level1.txt')
     if not path.exists(map_file):
         raise FileNotFoundError("Map file 'level1.txt' not found!")
@@ -122,6 +132,7 @@ class Game:
     self.all_powerups = pg.sprite.Group()
     self.all_coins = pg.sprite.Group()
     self.all_bullets = pg.sprite.Group() #adding bullets into main
+    self.mobs = pg.sprite.Group()
     # attributes for each sprite
     WALL_COLORS = [pg.Color('grey'), pg.Color('brown'), pg.Color('lightgrey'), pg.Color('darkgrey'), pg.Color('tan')]
     for row, tiles in enumerate(self.map.data):
