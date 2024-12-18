@@ -52,7 +52,8 @@ class Game:
     self.playing = True
     self.running = True
     self.score = 0
-
+    self.level_file = 'level1.txt'
+ 
   def draw_text(self, surface, text, size, color, x, y):
         font_name = pg.font.match_font('arial')
         font = pg.font.Font(font_name, size)
@@ -119,13 +120,50 @@ class Game:
     except:
        with open(path.join(self.game_folder, HS_FILE), 'w') as f:
             f.write(str(self.highscore)) 
-    map_file = path.join(self.game_folder, 'level1.txt')
-    if not path.exists(map_file):
-        raise FileNotFoundError("Map file 'level1.txt' not found!")
-    self.map = Map(map_file)
+    self.load_level(self.level_file)
+
+  def load_level(self, level_file):
+    # Clear existing sprites
+     self.all_sprites.empty()
+     self.all_walls.empty()
+     self.all_portals.empty()
+     self.all_coins.empty()
+     self.all_powerups.empty()
+     self.all_bullets.empty()
+     self.mobs.empty()
+
+     map_file = path.join(self.game_folder, level_file)
+     if not path.exists(map_file):
+        raise FileNotFoundError(f"Map file '{level_file}' not found!")
+     self.map = Map(map_file)
+
+     for row, tiles in enumerate(self.map.data):
+        for col, tile in enumerate(tiles):
+            if tile == '1':
+                wall_color = random.choice([pg.Color('grey'), pg.Color('brown'), pg.Color('lightgrey')])
+                Wall(self, col, row, wall_color)
+            elif tile == 'P':
+                Portal(self, col, row, "level2.txt")  # Change to load the next level, if needed
+            elif tile == 'M':
+                Mob(self, col, row)
+            elif tile == 'X':
+                self.player = Player(self, col, row)  # Reinitialize the player at the start of the new level
+            elif tile == 'U':
+                Powerup(self, col, row)
+            elif tile == 'C':
+                Coin(self, col, row)
+            elif tile == 'D':
+                DamagingFloor(self, col, row)
+            elif tile == 'S':
+                SpikeTrap(self, col, row)
+            elif tile == 'L':
+                MovingPlatform(self, col, row, dx=2, dy=0)
+
+    # Adjust camera bounds for the new level
+        self.camera = Camera(self.map.width * TILESIZE, self.map.height * TILESIZE)
+
 
   def new(self):
-    self.load_data()
     # create the all sprites group to allow for batch updates and draw methods
     self.all_sprites = pg.sprite.Group()
     self.all_walls = pg.sprite.Group()
@@ -133,8 +171,11 @@ class Game:
     self.all_coins = pg.sprite.Group()
     self.all_bullets = pg.sprite.Group() #adding bullets into main
     self.mobs = pg.sprite.Group()
+    self.all_portals = pg.sprite.Group()
+    self.load_data()
     # attributes for each sprite
     WALL_COLORS = [pg.Color('grey'), pg.Color('brown'), pg.Color('lightgrey'), pg.Color('darkgrey'), pg.Color('tan')]
+    self.player = None
     for row, tiles in enumerate(self.map.data):
       print(row*TILESIZE)
       for col, tile in enumerate(tiles):
@@ -142,9 +183,11 @@ class Game:
         if tile == '1':
           wall_color = random.choice(WALL_COLORS)
           Wall(self, col, row, wall_color)
+        elif tile == 'P':
+                Portal(self, col, row, "level2.txt")
         elif tile == 'M':
           Mob(self, col, row)
-        elif tile == 'P':
+        elif tile == 'X':
           self.player = Player(self, col, row)
         elif tile == 'U': 
           Powerup(self, col, row)
@@ -156,6 +199,9 @@ class Game:
             SpikeTrap(self, col, row)
         elif tile == 'L':  # Moving Platform
             MovingPlatform(self, col, row, dx=2, dy=0)
+
+    if self.player is None:
+      raise ValueError("Player spawn point (X) not found in the map!") 
 
     self.camera = Camera(self.map.width * TILESIZE, self.map.height * TILESIZE) #calcualtes total width and height of map for camera to stay inbounds
 
@@ -188,6 +234,13 @@ class Game:
   def update(self):
     self.all_sprites.update()
     self.camera.update(self.player)
+
+    portal_hits = pg.sprite.spritecollide(self.player, self.all_portals, False)
+    if portal_hits:
+        portal = portal_hits[0]
+        self.level_file = portal.target_level  # Load the next level
+        self.load_level(self.level_file)
+        self.new()  # Re-initialize the game with the new level
 
   def draw_text(self, surface, text, size, color, x, y):
     font_name = pg.font.match_font('arial')

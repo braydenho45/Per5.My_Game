@@ -19,6 +19,8 @@ def draw_health_bar(surface, x, y, health, max_health):
         outline_rect = pg.Rect(x, y, bar_length, bar_height)
         # filled portion of bar
         fill_rect = pg.Rect(x, y, fill, bar_height)
+        background_color = pg.Color('black')
+        pg.draw.rect(surface, background_color, outline_rect)
         # if health is over half, bar is green
         if health > max_health * 0.5:
             color = GREEN
@@ -71,13 +73,13 @@ class Player(Sprite):
         #     self.vy -= self.speed
         if keys[pg.K_a]:
             self.vel.x = -PLAYER_ACC
-            self.direction = vec(-1,0)
+            self.facing = vec(-1,0)
             self.image = pg.transform.flip(self.original_image, True, False)
         # if keys[pg.K_s]:
         #     self.vy += self.speed
         elif keys[pg.K_d]:
             self.vel.x = PLAYER_ACC
-            self.direction = vec(1,0)
+            self.facing = vec(1,0)
             self.image = self.original_image
         if keys[pg.K_SPACE]:
             self.jump()
@@ -99,8 +101,9 @@ class Player(Sprite):
             print('still trying to jump...')
 
     def shoot(self):
+        if self.facing.length() == 0:
+            self.facing = vec(1,0)
         Bullet(self.game, self.rect.centerx, self.rect.centery, self.facing) # determines location of bullet and the direction it is being fired at
-        self.facing = self.facing.normalize() if self.facing.length() > 0 else vec(1, 0)
             
     def collide_with_walls(self, dir):
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
@@ -155,7 +158,7 @@ class Mob(Sprite):
         self.health = 100
         self.max_health = 100
         self.last_shot = pg.time.get_ticks()
-        self.shoot_cooldown = 2000
+        self.shoot_cooldown = 5000
         self.facing_left = True
 
     def shoot(self):
@@ -188,7 +191,7 @@ class Mob(Sprite):
                 self.game.player.last_hit_time = now
         hits = pg.sprite.spritecollide(self, self.game.all_bullets, True) # the hits defines if the bullet hits the enemy, the enemy will die 
         for _ in hits:
-           self.take_damage(40)
+           self.take_damage(50)
 
 class MobBullet(Sprite):
     def __init__(self, game, x, y, direction):
@@ -208,7 +211,7 @@ class MobBullet(Sprite):
     def update(self):
         self.rect.x += self.speed * self.direction.x
         self.rect.y += self.speed * self.direction.y
-        if not self.rect.colliderect(pg.Rect(0, 0, WIDTH, HEIGHT)):
+        if (self.rect.right < 0 or self.rect.left > self.game.map.width or self.rect.bottom < 0 or self.rect.top > self.game.map.height):  
             self.kill()
         if self.rect.colliderect(self.game.player.rect):
             self.game.player.take_damage(10)  # Deal 10 damage to the player
@@ -258,7 +261,7 @@ class Bullet(Sprite):
         self.rect = self.image.get_rect() # gets the area of the bullet. which is used for collision
         self.rect.center = (x, y) # sets the inital position of the bullet
         self.speed = 10 # Bullet speed
-        self.direction = direction # defines the direction the bullet will move in 
+        self.direction = direction.normalize() # defines the direction the bullet will move in 
         if self.direction.x < 0:
             self.image = pg.transform.flip(self.original_image, True, False)
 
@@ -385,5 +388,17 @@ class MovingPlatform(Sprite):
             if isinstance(sprite, Player) and self.rect.colliderect(sprite.rect):
                 sprite.rect.x += self.dx
                 sprite.rect.y += self.dy
-
         
+class Portal(Sprite):
+    def __init__(self, game, x, y, target_level):
+        self.groups = game.all_sprites, game.all_portals
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image.fill(pg.Color('purple'))  # Portal color
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x * TILESIZE, y * TILESIZE)
+        self.target_level = target_level
+
+    def update(self):
+        pass
