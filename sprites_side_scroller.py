@@ -200,18 +200,22 @@ class MobBullet(Sprite):
         self.game = game
         self.image = pg.image.load("images/bullet.gif")  # Smaller bullet size
         self.image = pg.transform.scale(self.image, (32, 32))  # Mob bullet color
-        self.original_image = self.image
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.speed = 5
-        self.direction = direction
-        if self.direction.x < 0:
-            self.image = pg.transform.flip(self.original_image, True, False)
+        self.original_image = self.image #stores original image
+        self.rect = self.image.get_rect() #gets rectangle are of image for collision/positioning 
+        self.rect.center = (x, y) # sets center at (x,y)
+        self.speed = 5 #speed of bullet
+        self.direction = direction # how far bullet will travel
+        if self.direction.x < 0: # if bullet is moving left, image is flipped 
+            self.image = pg.transform.flip(self.original_image, True, False) 
+            # mirrors image horizontally while keeping original vertical orientation
 
     def update(self):
+        # adjusts bullet position based on speed and distance 
         self.rect.x += self.speed * self.direction.x
         self.rect.y += self.speed * self.direction.y
-        if (self.rect.right < 0 or self.rect.left > self.game.map.width or self.rect.bottom < 0 or self.rect.top > self.game.map.height):  
+        # checks if bullet has moved out of bounds 
+        if (self.rect.right < 0 or self.rect.left > self.game.map.width 
+            or self.rect.bottom < 0 or self.rect.top > self.game.map.height):  
             self.kill()
         if self.rect.colliderect(self.game.player.rect):
             self.game.player.take_damage(10)  # Deal 10 damage to the player
@@ -274,7 +278,7 @@ class Bullet(Sprite):
             self.kill()
 
     def draw(self):
-        # We don't change bullet position here, just render it relative to the camera
+        # don't change bullet position here, render it relative to the camera
         self.game.camera.apply(self)  # Apply camera offset for drawing
         self.game.screen.blit(self.image, self.rect)
 
@@ -394,8 +398,8 @@ class Portal(Sprite):
         self.groups = game.all_sprites, game.all_portals
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(pg.Color('purple'))  # Portal color
+        self.image = pg.image.load("images/door.gif")
+        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x * TILESIZE, y * TILESIZE)
         self.target_level = target_level

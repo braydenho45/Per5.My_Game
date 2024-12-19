@@ -12,11 +12,30 @@ from os import path
 
 '''
 
+Sources: 
+1. Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets):
+used to allow player to fire bullets
+
+2. How to make a menu screen in pygame by baraltech: used to create main menu screen for game
+
+3. Learn pygame! #6 Game over screen: used to create a game over screen
+
+4. Projectiles and Enemy Behavior in pygame! Python Game Development Tutorial # 3: used to allow mobs to shoot bullets back at player and chase player.
+
+5. Paul Baumgarten Pygame 12 Portals: used to help make a portal that teleports player between levels
+
+6. Coding with Russ How to create Health Bars Pygame tutorials: used to make health bars for player and mobs
+
+7. Chatgpt: Prompt was "how to insert images over the player, mobs, and objects in pygame in Visual Studio Code?"
+
+8. CDcodes Pygame Camera Tutorial: How to make a Side-Scrolling Camera system: used to make camera that follows player movements
+
 Design Goals: 
 make the player and mobs be able to shoot bullets
 create health bars for the player and mobs
 create a camera that follows the player around the map
-extend the level 1 map.
+extend the level 1 map 
+have a bossfight at the end of the level
 
 Elevator Pitch: create a slide scroller where a character has a blaster and must blast through the hordes of enemies and platform across dangerous territory.
 There were be a boss at the end with special powers.
@@ -29,13 +48,6 @@ FREEDOM: left and right movement, jumping.
 What's the sentence: Player 1 shoots bullet at enemy and enemy takes damage...
 
 Alpha Goal: to create a first person shooter with dodging, collision and projectiles
-
-Sources: 
-1. Coding with Russ(Pygame Scrolling Shooter Game Beginner Tutorial in Python - Part 4-Shooting Bullets):
-used to allow player to fire bullets
-2. How to make a menu screen in pygame by baraltech: used to create main menu screen for game
-3. Learn pygame! #6 Game over screen: used to create a game over screen
-4. Projectiles and Enemy Behavior in pygame! Python Game Development Tutorial # 3: used to allow mobs to shoot bullets back at player and chase player.
 
 '''
 
@@ -62,6 +74,7 @@ class Game:
         text_rect.center = (x, y)
         surface.blit(text_surface, text_rect)
 
+  #code for main menu screen
   def main_menu(self):
         self.screen.fill(BLACK)
         self.draw_text(self.screen, "Bullet Dash", 48, RED, WIDTH // 2, HEIGHT // 4)
